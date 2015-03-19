@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>References on MongoDB .NET Driver</title>
+    <link>/mongo-csharp-driver/2.0/reference/</link>
+    <description>Recent content in References on MongoDB .NET Driver</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 17 Mar 2015 15:36:56 +0000</lastBuildDate>
+    <atom:link href="/mongo-csharp-driver/2.0/reference/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Authentication</title>
+      <link>/mongo-csharp-driver/2.0/reference/driver/authentication/</link>
+      <pubDate>Tue, 17 Mar 2015 15:36:56 +0000</pubDate>
+      
+      <guid>/mongo-csharp-driver/2.0/reference/driver/authentication/</guid>
+      <description>
+
+&lt;h2 id=&#34;authentication:6b57b661b9236f856cd4f0afa1bed671&#34;&gt;Authentication&lt;/h2&gt;
+
+&lt;p&gt;The .NET driver supports all &lt;a href=&#34;http://docs.mongodb.org/manual/core/authentication/&#34;&gt;MongoDB authentication mechanisms&lt;/a&gt; including those in the &lt;a href=&#34;http://docs.mongodb.org/manual/administration/install-enterprise/&#34;&gt;Enterprise Edition&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Authentication credentials are created by the application as instances of &lt;code&gt;MongoCredential&lt;/code&gt; which includes static factory methods for each of the supported authentication mechanisms. A list of these instances must be passed to the driver using the &lt;code&gt;MongoClient&lt;/code&gt; constructor that takes a &lt;code&gt;MongoClientSettings&lt;/code&gt;. When only one credential is necessary, it is possible to specify via the &lt;a href=&#34;TODO&#34;&gt;connection string&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;default:6b57b661b9236f856cd4f0afa1bed671&#34;&gt;Default&lt;/h3&gt;
+
+&lt;p&gt;MongoDB 3.0 changed the default authentication mechanism from &lt;a href=&#34;http://docs.mongodb.org/manual/core/authentication/#mongodb-cr-authentication&#34;&gt;MONGODB-CR&lt;/a&gt; to &lt;a href=&#34;http://docs.mongodb.org/manual/core/authentication/#scram-sha-1-authentication&#34;&gt;SCRAM-SHA-1&lt;/a&gt;. To create a credential that will authenticate properly regardless of server version, create a credential using the following static factory method.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-csharp&#34;&gt;var credential = MongoCredential.CreateCredential(databaseName, username, password);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Or via the connection string:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;mongodb://username:password@myserver/databaseName
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is the recommended approach as it will make upgrading from MongoDB 2.6 to MongoDB 3.0 seamless, even after &lt;a href=&#34;http://docs.mongodb.org/manual/release-notes/3.0-scram/#upgrade-mongodb-cr-to-scram&#34;&gt;upgrading the authentication schema&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;x-509-authentication:6b57b661b9236f856cd4f0afa1bed671&#34;&gt;x.509 Authentication&lt;/h3&gt;
+
+&lt;p&gt;The &lt;a href=&#34;http://docs.mongodb.org/manual/core/authentication/#x-509-certificate-authentication&#34;&gt;x.509&lt;/a&gt; mechanism authenticates a user whose name is derived from the distinguished subject name of the x.509 certificate presented by the driver during SSL negotiation. This authentication method requires the use of SSL connections with certificate validation and is available in MongoDB 2.6 and newer. To create a credential of this type use the following static factory method:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-csharp&#34;&gt;var credential = MongoCredential.CreateX509Credential(username);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Or via the connection string:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;mongodb://username@myserver/?authMechanism=MONGODB-X509
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Even when using the connection string to provide the credential, the certificate must still be provided via code. This certificate can be pulled out of the trust stores on the box, or from a file. However, to be used with client authentication, the &lt;a href=&#34;https://msdn.microsoft.com/en-us/library/system.security.cryptography.x509certificates.x509certificate&#34;&gt;X509Certificate&lt;/a&gt; provided to the driver must contain the &lt;a href=&#34;https://msdn.microsoft.com/en-us/library/system.security.cryptography.x509certificates.x509certificate2.privatekey(v=vs.110&#34;&gt;PrivateKey&lt;/a&gt;.aspx).&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-csharp&#34;&gt;var cert = new X509Certificate2(&amp;quot;client.pfx&amp;quot;, &amp;quot;mySuperSecretPassword&amp;quot;);
+
+var settings = new MongoClientSettings
+{
+    Credentials = new[] 
+    {
+        MongoCredential.CreateMongoX509Credential(&amp;quot;CN=client,OU=user,O=organization,L=Some City,ST=Some State,C=Some Country&amp;quot;)
+    },
+    SslSettings = new SslSettings
+    {
+        ClientCertificates = new[] { cert },
+    },
+    UseSsl = true
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;gssapi-kerberos:6b57b661b9236f856cd4f0afa1bed671&#34;&gt;GSSAPI/Kerberos&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://www.mongodb.com/products/mongodb-enterprise&#34;&gt;MongoDB Enterprise&lt;/a&gt; supports authentication using &lt;a href=&#34;http://docs.mongodb.org/manual/core/authentication/#kerberos-authentication&#34;&gt;Kerberos/GSSAPI&lt;/a&gt;. To create a Kerberos/GSSAPI credential, use the following method:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-csharp&#34;&gt;var credential = MongoCredential.CreateGssapiCredential(username, password);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Or via the connection string:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;mongodb://username%40REALM.com:password@myserver/?authMechanism=GSSAPI
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Note that the username will need to have a REALM associated with it. When used in a connection string, &lt;code&gt;%40&lt;/code&gt; is the escape character for the &lt;code&gt;@&lt;/code&gt; symbol.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;If the process owner running your application is the same as the user needing authentication, you can omit the password:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-csharp&#34;&gt;var credential = MongoCredential.CreateGssapiCredential(username);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Or via the connection string:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;mongodb://username%40REALM.com@myserver/?authMechanism=GSSAPI
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Depending on the kerberos setup, it may be required to specify some additional properties. These may be specified in the connection string or via code.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;&lt;strong&gt;CANONICALIZE_HOST_NAME&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Uses the DNS server to retrieve the fully qualified domain name (FQDN) of the host.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-csharp&#34;&gt;credential = credential.WithMechanismProperty(&amp;quot;CANONICALIZE_HOST_NAME&amp;quot;, &amp;quot;true&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Or via the connection string:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;mongodb://username@myserver/?authMechanism=GSSAPI&amp;amp;authMechanismProperties=CANONICALIZE_HOSTNAME:true
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;strong&gt;REALM&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;This is used when the user&amp;rsquo;s realm is different from the service&amp;rsquo;s realm.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-csharp&#34;&gt;credential = credential.WithMechanismProperty(&amp;quot;REALM&amp;quot;, &amp;quot;otherrealm&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Or via the connection string:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;mongodb://username%40REALM.com@myserver/?authMechanism=GSSAPI&amp;amp;authMechanismProperties=REALM:otherrealm
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;strong&gt;SERVICE_NAME&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;This is used when the service&amp;rsquo;s name is different that the default &lt;code&gt;mongodb&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-csharp&#34;&gt;credential = credential.WithMechanismProperty(&amp;quot;SERVICE_NAME&amp;quot;, &amp;quot;othername&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Or via the connection string:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;mongodb://username%40REALM.com@myserver/?authMechanism=GSSAPI&amp;amp;authMechanismProperties=SERVICE_NAME:othername
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;In addition, it is possible to use multiple authentication mechanism properties either via code or in the connection string. In code, call &lt;code&gt;WithMechanismProperty&lt;/code&gt; multiple times. In the connection string, separate the entries with a &lt;code&gt;,&lt;/code&gt; (comma).&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;mongodb://username%40REALM.com@myserver/?authMechanism=GSSAPI&amp;amp;authMechanismProperties=SERVICE_NAME:othername,REALM:otherrealm
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;ldap-plain:6b57b661b9236f856cd4f0afa1bed671&#34;&gt;LDAP (PLAIN)&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://www.mongodb.com/products/mongodb-enterprise&#34;&gt;MongoDB Enterprise&lt;/a&gt; supports proxy authentication through a Lightweight Directory Access Protocol (LDAP) service. To create a credential of type LDAP use the following static factory method:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-csharp&#34;&gt;var credential = MongoCredential.CreatePlainCredential(&amp;quot;$external&amp;quot;, username, password);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Or via the connection string:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;mongodb://username:password@myserver/?authSource=$external&amp;amp;authMechanism=PLAIN
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Note that the method refers to the plain authentication mechanism instead of LDAP because technically the driver is authenticating via the PLAIN SASL mechanism. This means that your credentials are in plain text on the wire. Therefore, PLAIN should only be used in conjunction with SSL.&lt;/p&gt;
+&lt;/blockquote&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Bson</title>
+      <link>/mongo-csharp-driver/2.0/reference/bson/</link>
+      <pubDate>Tue, 17 Mar 2015 15:36:56 +0000</pubDate>
+      
+      <guid>/mongo-csharp-driver/2.0/reference/bson/</guid>
+      <description>
+
+&lt;h2 id=&#34;bson-reference:d680e8a854a7cbad6d490c445cba2eba&#34;&gt;Bson Reference&lt;/h2&gt;
+
+&lt;p&gt;The MongoDB.Bson library handles the &lt;a href=&#34;http://bsonspec.org&#34;&gt;BSON format&lt;/a&gt; as well as serialization to and from .NET types.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Driver</title>
+      <link>/mongo-csharp-driver/2.0/reference/driver/</link>
+      <pubDate>Tue, 17 Mar 2015 15:36:56 +0000</pubDate>
+      
+      <guid>/mongo-csharp-driver/2.0/reference/driver/</guid>
+      <description>
+
+&lt;h2 id=&#34;driver-reference:d680e8a854a7cbad6d490c445cba2eba&#34;&gt;Driver Reference&lt;/h2&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Driver Core</title>
+      <link>/mongo-csharp-driver/2.0/reference/driver_core/</link>
+      <pubDate>Tue, 17 Mar 2015 15:36:56 +0000</pubDate>
+      
+      <guid>/mongo-csharp-driver/2.0/reference/driver_core/</guid>
+      <description>
+
+&lt;h2 id=&#34;driver-core-reference:d680e8a854a7cbad6d490c445cba2eba&#34;&gt;Driver Core Reference&lt;/h2&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Reference</title>
+      <link>/mongo-csharp-driver/2.0/reference/</link>
+      <pubDate>Tue, 17 Mar 2015 15:36:56 +0000</pubDate>
+      
+      <guid>/mongo-csharp-driver/2.0/reference/</guid>
+      <description>
+
+&lt;h2 id=&#34;reference-page-index:d680e8a854a7cbad6d490c445cba2eba&#34;&gt;Reference Page index&lt;/h2&gt;
+
+&lt;p&gt;The reference documentation is not an API reference. You can review those &lt;a href=&#34;http://api.mongodb.org/csharp/2.0.0/&#34;&gt;here&lt;/a&gt;. Instead, the reference documentation will focus on high-level documentation and use-cases.&lt;/p&gt;
+
+&lt;p&gt;TODO: Table of Contents&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
